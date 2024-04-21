@@ -3,7 +3,7 @@
 const coreTeam: Person[] = ['Eva', 'Steffi', 'Luca', 'Desi', 'Fred', 'Rebecca']
 const numberOfDays: number = 7
 const numberOfShiftsPerDay: number = 2
-const numberOfPeoplePerShift: number = 3
+const numberOfPersonsPerShift: number = 3
 
 /// CONFIG ///
 
@@ -29,7 +29,7 @@ const rules = [
 
 function main (): void {
   // randomly init first genereation:
-  const shiftSchedule: ShiftSchedule = initSchedule(coreTeam, numberOfDays, numberOfShiftsPerDay, numberOfPeoplePerShift)
+  const shiftSchedule: ShiftSchedule = initSchedule(coreTeam, numberOfDays, numberOfShiftsPerDay, numberOfPersonsPerShift)
 
   // check fitness:
   const fitness: number = calculateFitness(shiftSchedule)
@@ -51,16 +51,21 @@ main()
 
 /**
  * Initializes the schedule with a random combination of people.
+ *
+ * No person can work twice in the same shift, so we sample without replacement.
  */
-function initSchedule (people: Person[], numberOfDays: number, numberOfShiftsPerDay: number, numberOfPeoplePerShift: number): ShiftSchedule {
+function initSchedule (people: Person[], numberOfDays: number, numberOfShiftsPerDay: number, numberOfPersonsPerShift: number): ShiftSchedule {
   const shiftSchedule: ShiftSchedule = []
 
   for (let i = 0; i < numberOfDays; i++) {
     const day: Day = []
     for (let j = 0; j < numberOfShiftsPerDay; j++) {
       const shift: Shift = []
-      for (let k = 0; k < numberOfPeoplePerShift; k++) {
-        shift.push(people[Math.floor(Math.random() * people.length)])
+      const currentPeople: Person[] = [...people]
+      for (let k = 0; k < numberOfPersonsPerShift; k++) {
+        const drawIndex: number = Math.floor(Math.random() * currentPeople.length)
+        shift.push(currentPeople[drawIndex])
+        currentPeople.splice(drawIndex, 1)
       }
       day.push(shift)
     }
@@ -70,13 +75,40 @@ function initSchedule (people: Person[], numberOfDays: number, numberOfShiftsPer
   return shiftSchedule
 }
 
+/**
+ * Returns all shifts as an array.
+ */
+function extractShits (schedule: ShiftSchedule): Shift[] {
+  return schedule.reduce((shifts: Shift[], day: Day): Shift[] => {
+    return [...shifts, ...day]
+  }, [])
+}
+
 /// RULES ///
 
 function dontWorkWithTheSamePersonTwice (schedule: ShiftSchedule): number {
+  const shifts = extractShits(schedule)
+  console.log('shifts:', shifts)
   return 1
 }
 
+/**
+ *
+ */
 function workOnlyOneShiftPerDay (schedule: ShiftSchedule): number {
+  schedule.map((day: Day): number => {
+    return day.map((shift: Shift): number => {
+      return shift.map((person: Person): number => {
+        let isInOtherShift: number = 0
+        day.forEach((shift2: Shift) => {
+          if (shift2.includes(person)) {
+            isInOtherShift++
+          }
+        })
+        return isInOtherShift
+      }).reduce((acc: number, curr: number): number => acc + curr)
+    }).reduce((acc: number, curr: number): number => acc + curr)
+  })
   return 1
 }
 
