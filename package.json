@@ -7,7 +7,8 @@
     "build": "rm -rf dist/ && tsc",
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "test": "jest"
+    "test": "jest",
+    "test:dev": "jest --watch"
   },
   "author": "Frederik S. Held <kontakt@frederikheld.de>",
   "license": "GPL-3.0-or-later",
